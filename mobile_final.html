@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>📱 Dashboard Móvil 100% Funcional - Inventario Lalalou</title>
+    
+    <!-- Tailwind CSS Mobile Optimized -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js Mobile Optimized -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS para Excel (móvil compatible) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF para PDF (móvil compatible) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { 
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Mobile-first design */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+        
+        /* Mobile cards */
+        .mobile-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        /* Stats grid for mobile */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 0 -8px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #f1f5f9;
+        }
+        
+        /* Mobile charts */
+        .chart-container-mobile {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        
+        /* Touch-friendly buttons */
+        .touch-button {
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            min-height: 50px;
+            width: 100%;
+        }
+        
+        .touch-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Bottom navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .nav-item:active {
+            background: #f3f4f6;
+        }
+        
+        /* Toast para móvil */
+        .mobile-toast {
+            position: fixed;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            background: #10b981;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            z-index: 1001;
+            animation: slideUp 0.3s ease-out;
+            display: none;
+            text-align: center;
+        }
+        
+        .mobile-toast.error {
+            background: #ef4444;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Loader para móvil */
+        .mobile-loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Product list for mobile */
+        .product-item {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .product-item:last-child {
+            border-bottom: none;
+        }
+        
+        .product-item.critical {
+            background: linear-gradient(90deg, rgba(254, 226, 226, 0.3), rgba(254, 226, 226, 0.1));
+            border-left: 4px solid #ef4444;
+        }
+        
+        /* Insights cards mobile */
+        .insight-card-mobile {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+        
+        .insight-card-mobile:active {
+            transform: scale(0.98);
+        }
+        
+        .insight-critical { border-left-color: #ef4444; }
+        .insight-pattern { border-left-color: #10b981; }
+        .insight-profit { border-left-color: #f59e0b; }
+        
+        /* Modal para móvil */
+        .mobile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal-content-mobile {
+            background: white;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideUp 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Safe area for iPhone X+ */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
+            
+            .bottom-nav {
+                padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body class="pb-20">
+    <!-- Toast para móvil -->
+    <div id="mobileToast" class="mobile-toast">
+        <div class="flex items-center justify-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="toastMessage">Operación completada</span>
+        </div>
+    </div>
+    
+    <!-- Modal para detalles -->
+    <div id="mobileModal" class="mobile-modal">
+        <div class="modal-content-mobile">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900" id="modalTitle">Detalles</h3>
+                    <button onclick="closeMobileModal()" class="text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="modalContent">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Header móvil -->
+    <header class="pt-6 px-4">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-3 rounded-2xl shadow-lg">
+                    <i class="fas fa-chart-bar text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">Dashboard Móvil</h1>
+                    <p class="text-white text-sm opacity-90">100% Funcional • TODOS los botones</p>
+                </div>
+            </div>
+            <div class="bg-white p-2 rounded-full">
+                <span class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    6 CRÍTICOS
+                </span>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid mb-6">
+            <div class="stat-card">
+                <p class="text-xs text-gray-500">Stock Total</p>
+                <p class="text-2xl font-bold text-blue-700">802</p>
+                <p class="text-xs text-gray-400">unidades</p>
+            </div>
+            
+            <div class="stat-card">
+                <p class="text-xs text-gray-500">Ventas/Sem</p>
+                <p class="text-2xl font-bold text-green-700">298</p>
+                <p class="text-xs text-gray-400">ritmo ALTO</p>
+            </div>
+            
+            <div class="stat-card">
+                <p class="text-xs text-gray-500">Semanas</p>
+                <p class="text-2xl font-bold text-yellow-700">2.69</p>
+                <p class="text-xs text-gray-400">restantes</p>
+            </div>
+            
+            <div class="stat-card">
+                <p class="text-xs text-gray-500">Críticos</p>
+                <p class="text-2xl font-bold text-red-700">6</p>
+                <p class="text-xs text-gray-400">productos</p>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="px-4">
+        <!-- Alert Banner -->
+        <div class="mobile-card mb-4">
+            <div class="p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-red-100 p-3 rounded-xl">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-red-800">🚨 ACCIÓN REQUERIDA</h3>
+                        <p class="text-sm text-red-700">6 productos con stock crítico</p>
+                    </div>
+                </div>
+                <button onclick="showCriticalActionsMobile()" class="touch-button bg-red-600 text-white">
+                    <i class="fas fa-bell mr-2"></i>Ver acciones urgentes
+                </button>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="mobile-card mb-4">
+            <div class="p-4">
+                <h3 class="font-bold text-gray-900 mb-3">📊 Acciones Principales</h3>
+                <div class="space-y-3">
+                    <button onclick="exportToExcelMobile()" class="touch-button bg-white border border-green-600 text-green-600" id="excelBtnMobile">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
+                        <div id="excelLoaderMobile" class="mobile-loader"></div>
+                    </button>
+                    
+                    <button onclick="exportToPDFMobile()" class="touch-button bg-white border border-red-600 text-red-600" id="pdfBtnMobile">
+                        <i class="fas fa-file-pdf"></i> Exportar a PDF
+                        <div id="pdfLoaderMobile" class="mobile-loader"></div>
+                    </button>
+                    
+                    <button onclick="refreshDataMobile()" class="touch-button bg-blue-600 text-white" id="refreshBtnMobile">
+                        <i class="fas fa-sync-alt"></i> Actualizar Datos
+                        <div id="refreshLoaderMobile" class="mobile-loader"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Insights del Data Analyst -->
+        <div class="mobile-card mb-4">
+            <div class="p-4">
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-purple-500"></i>
+                    Insights del Data Analyst
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="insight-card-mobile insight-critical" onclick="showInsightDetailMobile('critical')">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-red-100 p-2 rounded-lg">
+                                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-red-900">Producto Crítico Adicional</h4>
+                                <p class="text-sm text-red-700">CHAQUETA CUERO NEGRA</p>
+                                <p class="text-xs text-red-600">Stock: 2 • 0.5 semanas</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-red-400 mt-1"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card-mobile insight-pattern" onclick="showInsightDetailMobile('pattern')">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-green-100 p-2 rounded-lg">
+                                <i class="fas fa-chart-pie text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-green-900">Patrón de Ventas</h4>
+                                <p class="text-sm text-green-700">42% ventas Miércoles-Viernes</p>
+                                <p class="text-xs text-green-600">Optimizar stock esos días</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-green-400 mt-1"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card-mobile insight-profit" onclick="showInsightDetailMobile('profit')">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-yellow-100 p-2 rounded-lg">
+                                <i class="fas fa-money-bill-wave text-yellow-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-yellow-900">Rentabilidad</h4>
+                                <p class="text-sm text-yellow-700">Jeans: 47.8% margen (bajo)</p>
+                                <p class="text-xs text-yellow-600">Revisar precio/costo</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-yellow-400 mt-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos -->
+        <div class="mobile-card mb-4">
+            <div class="p-4">
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-blue-500"></i>
+                    Gráficos
+                </h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-2">Proyección de Stock</h4>
+                        <div class="chart-container-mobile">
+                            <canvas id="projectionChartMobile"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="updateChartData('weekly')" class="flex-1 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">
+                            Semanal
+                        </button>
+                        <button onclick="updateChartData('monthly')" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+                            Mens
