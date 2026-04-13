@@ -1,0 +1,144 @@
+{
+  "productos": [
+    {
+      "id": 1,
+      "nombre": "Smartphone Galaxy",
+      "categoria": "Electrónicos",
+      "stock": 15,
+      "ventas_semanales": 8
+    },
+    {
+      "id": 2,
+      "nombre": "Laptop Dell",
+      "categoria": "Computadoras",
+      "stock": 3,
+      "ventas_semanales": 5
+    },
+    {
+      "id": 3,
+      "nombre": "Auriculares Bluetooth",
+      "categoria": "Accesorios",
+      "stock": 25,
+      "ventas_semanales": 12
+    },
+    {
+      "id": 4,
+      "nombre": "Tablet iPad",
+      "categoria": "Electrónicos",
+      "stock": 8,
+      "ventas_semanales": 6
+    },
+    {
+      "id": 5,
+      "nombre": "Mouse Inalámbrico",
+      "categoria": "Accesorios",
+      "stock": 2,
+      "ventas_semanales": 4
+    },
+    {
+      "id": 6,
+      "nombre": "Teclado Mecánico",
+      "categoria": "Accesorios",
+      "stock": 12,
+      "ventas_semanales": 7
+    },
+    {
+      "id": 7,
+      "nombre": "Monitor 24 pulgadas",
+      "categoria": "Pantallas",
+      "stock": 6,
+      "ventas_semanales": 3
+    },
+    {
+      "id": 8,
+      "nombre": "Impresora Láser",
+      "categoria": "Oficina",
+      "stock": 4,
+      "ventas_semanales": 2
+    },
+    {
+      "id": 9,
+      "nombre": "Disco Duro Externo",
+      "categoria": "Almacenamiento",
+      "stock": 18,
+      "ventas_semanales": 9
+    },
+    {
+      "id": 10,
+      "nombre": "Cámara Digital",
+      "categoria": "Fotografía",
+      "stock": 7,
+      "ventas_semanales": 3
+    },
+    {
+      "id": 11,
+      "nombre": "Parlante Bluetooth",
+      "categoria": "Audio",
+      "stock": 1,
+      "ventas_semanales": 6
+    },
+    {
+      "id": 12,
+      "nombre": "Cable USB-C",
+      "categoria": "Cables",
+      "stock": 30,
+      "ventas_semanales": 15
+    },
+    {
+      "id": 13,
+      "nombre": "Cargador Rápido",
+      "categoria": "Accesorios",
+      "stock": 14,
+      "ventas_semanales": 11
+    },
+    {
+      "id": 14,
+      "nombre": "Router WiFi",
+      "categoria": "Redes",
+      "stock": 9,
+      "ventas_semanales": 4
+    },
+    {
+      "id": 15,
+      "nombre": "Micrófono USB",
+      "categoria": "Audio",
+      "stock": 5,
+      "ventas_semanales": 3
+    },
+    {
+      "id": 16,
+      "nombre": "Webcam HD",
+      "categoria": "Video",
+      "stock": 11,
+      "ventas_semanales": 7
+    },
+    {
+      "id": 17,
+      "nombre": "Memoria USB 32GB",
+      "categoria": "Almacenamiento",
+      "stock": 22,
+      "ventas_semanales": 13
+    },
+    {
+      "id": 18,
+      "nombre": "Soporte para Laptop",
+      "categoria": "Ergonomía",
+      "stock": 8,
+      "ventas_semanales": 5
+    },
+    {
+      "id": 19,
+      "nombre": "Filtro de Pantalla",
+      "categoria": "Protección",
+      "stock": 16,
+      "ventas_semanales": 4
+    },
+    {
+      "id": 20,
+      "nombre": "Hub USB",
+      "categoria": "Conectividad",
+      "stock": 13,
+      "ventas_semanales": 8
+    }
+  ]
+}

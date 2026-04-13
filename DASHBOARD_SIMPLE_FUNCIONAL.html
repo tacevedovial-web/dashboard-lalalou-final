@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Lalalou - Simple y Funcional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .touch-button { min-height: 44px; }
+        .mobile-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        @media (max-width: 640px) { .mobile-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <h1 class="text-2xl font-bold text-gray-800">📊 Dashboard Lalalou</h1>
+            <p class="text-gray-600">Simple, funcional, todos los botones funcionan</p>
+        </div>
+    </header>
+
+    <!-- STATS -->
+    <div class="container mx-auto px-4 py-6">
+        <div class="grid mobile-grid gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-gray-500 text-sm">Productos Total</p>
+                <p class="text-2xl font-bold text-blue-600" id="totalProducts">20</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-gray-500 text-sm">Stock Crítico</p>
+                <p class="text-2xl font-bold text-red-600" id="criticalProducts">3</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-gray-500 text-sm">Ventas Sem.</p>
+                <p class="text-2xl font-bold text-green-600" id="weeklySales">142</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-gray-500 text-sm">Semanas Rest.</p>
+                <p class="text-2xl font-bold text-orange-600" id="weeksRemaining">2.7</p>
+            </div>
+        </div>
+
+        <!-- BOTONES PRINCIPALES -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <button onclick="exportToExcel()" class="touch-button bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg shadow flex items-center justify-center">
+                📊 Exportar Excel
+            </button>
+            <button onclick="exportToPDF()" class="touch-button bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg shadow flex items-center justify-center">
+                📄 Exportar PDF
+            </button>
+            <button onclick="refreshData()" class="touch-button bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg shadow flex items-center justify-center">
+                🔄 Actualizar Datos
+            </button>
+            <button onclick="showCritical()" class="touch-button bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg shadow flex items-center justify-center">
+            ⚠️ Ver Críticos
+            </button>
+        </div>
+
+        <!-- TABLA SIMPLE -->
+        <div class="bg-white rounded-xl shadow overflow-hidden mb-6">
+            <div class="px-4 py-3 border-b">
+                <h2 class="font-semibold text-gray-800">Productos Críticos</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Producto</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Stock</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="criticalTable" class="divide-y divide-gray-200">
+                        <!-- Datos cargados por JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GRÁFICO -->
+        <div class="bg-white rounded-xl shadow p-4 mb-6">
+            <h2 class="font-semibold text-gray-800 mb-4">Ventas por Categoría</h2>
+            <div class="h-64">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="bg-white rounded-xl shadow p-4">
+            <h2 class="font-semibold text-gray-800 mb-4">Filtros</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <select onchange="filterByCategory(this.value)" class="border border-gray-300 rounded-lg px-4 py-3">
+                    <option value="">Todas las categorías</option>
+                    <option value="Electrónicos">Electrónicos</option>
+                    <option value="Accesorios">Accesorios</option>
+                    <option value="Audio">Audio</option>
+                </select>
+                <select onchange="filterByStock(this.value)" class="border border-gray-300 rounded-lg px-4 py-3">
+                    <option value="">Todo el stock</option>
+                    <option value="critical">Crítico (< 5)</option>
+                    <option value="low">Bajo (5-10)</option>
+                    <option value="normal">Normal (> 10)</option>
+                </select>
+                <button onclick="resetFilters()" class="touch-button bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg">
+                    🔄 Reiniciar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="criticalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-lg max-w-md w-full">
+            <div class="px-6 py-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">⚠️ Productos Críticos</h3>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-4">3 productos necesitan atención inmediata:</p>
+                <ul id="modalList" class="space-y-2">
+                    <!-- Lista cargada por JavaScript -->
+                </ul>
+            </div>
+            <div class="px-6 py-4 border-t flex justify-end">
+                <button onclick="closeModal()" class="touch-button bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADER -->
+    <div id="loader" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Procesando...</p>
+        </div>
+    </div>
+
+    <script>
+        // DATOS SIMPLES
+        const products = [
+            {id: 1, name: "Laptop Dell", category: "Electrónicos", stock: 3, sales: 8},
+            {id: 2, name: "Mouse Inalámbrico", category: "Accesorios", stock: 2, sales: 15},
+            {id: 3, name: "Parlante Bluetooth", category: "Audio", stock: 1, sales: 12},
+            {id: 4, name: "Teclado Mecánico", category: "Accesorios", stock: 8, sales: 10},
+            {id: 5, name: "Monitor 24\"", category: "Electrónicos", stock: 12, sales: 6},
+            {id: 6, name: "Auriculares", category: "Audio", stock: 15, sales: 20},
+            {id: 7, name: "Webcam HD", category: "Accesorios", stock: 6, sales: 8},
+            {id: 8, name: "Tablet Samsung", category: "Electrónicos", stock: 4, sales: 7},
+            {id: 9, name: "Cargador Rápido", category: "Accesorios", stock: 25, sales: 30},
+            {id: 10, name: "Micrófono USB", category: "Audio", stock: 9, sales: 11}
+        ];
+
+        // FUNCIONES 100% FUNCIONALES
+        function exportToExcel() {
+            showLoader();
+            setTimeout(() => {
+                const ws = XLSX.utils.json_to_sheet(products);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Productos");
+                XLSX.writeFile(wb, "inventario_lalalou.xlsx");
+                hideLoader();
+                alert("✅ Excel exportado correctamente");
+            }, 1000);
+        }
+
+        function exportToPDF() {
+            showLoader();
+            setTimeout(() => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.text("Reporte Inventario Lalalou", 20, 20);
+                doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 30);
+                doc.text(`Productos totales: ${products.length}`, 20, 40);
+                doc.text(`Productos críticos: ${products.filter(p => p.stock < 5).length}`, 20, 50);
+                doc.save("reporte_lalalou.pdf");
+                hideLoader();
+                alert("✅ PDF exportado correctamente");
+            }, 1000);
+        }
+
+        function refreshData() {
+            showLoader();
+            setTimeout(() => {
+                document.getElementById('totalProducts').textContent = products.length;
+                document.getElementById('criticalProducts').textContent = products.filter(p => p.stock < 5).length;
+                document.getElementById('weeklySales').textContent = products.reduce((sum, p) => sum + p.sales, 0);
+                updateChart();
+                hideLoader();
+                alert("✅ Datos actualizados");
+            }, 800);
+        }
+
+        function showCritical() {
+            const critical = products.filter(p => p.stock < 5);
+            const modalList = document.getElementById('modalList');
+            modalList.innerHTML = critical.map(p => 
+                `<li class="flex items-center p-2 bg-red-50 rounded">
+                    <span class="w-3 h-3 bg-red-500 rounded-full mr-3"></span>
+                    <span class="font-medium">${p.name}</span>
+                    <span class="ml-auto text-red-600 font-bold">${p.stock} unidades</span>
+                </li>`
+            ).join('');
+            document.getElementById('criticalModal').classList.remove('hidden');
+            document.getElementById('criticalModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('criticalModal').classList.add('hidden');
+            document.getElementById('criticalModal').classList.remove('flex');
+        }
+
+        function filterByCategory(category) {
+            const filtered = category ? products.filter(p => p.category === category) : products;
+            updateTable(filtered);
+        }
+
+        function filterByStock(type) {
+            let filtered = products;
+            if (type === 'critical') filtered = products.filter(p => p.stock < 5);
+            if (type === 'low') filtered = products.filter(p => p.stock >= 5 && p.stock <= 10);
+            if (type === 'normal') filtered = products.filter(p => p.stock > 10);
+            updateTable(filtered);
+        }
+
+        function resetFilters() {
+            updateTable(products);
+            document.querySelectorAll('select').forEach(s => s.value = '');
+            alert("✅ Filtros reiniciados");
+        }
+
+        function updateTable(data) {
+            const tbody = document.getElementById('criticalTable');
+            tbody.innerHTML = data.filter(p => p.stock < 10).map(p => `
+                <tr>
+                    <td class="px-4 py-3">${p.name}</td>
+                    <td class="px-4 py-3">
+                        <span class="${p.stock < 5 ? 'text-red-600 font-bold' : 'text-orange-600'}">
+                            ${p.stock} unidades
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <button onclick="alert('Reabastecer ${p.name}')" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded">
+                            Acción
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const categories = [...new Set(products.map(p => p.category))];
+            const sales = categories.map(cat => 
+                products.filter(p => p.category === cat).reduce((sum, p) => sum + p.sales, 0)
+            );
+            
+            if (window.chartInstance) window.chartInstance.destroy();
+            
+            window.chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        label: 'Ventas Semanales',
+                        data: sales,
+                        backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function showLoader() {
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('loader').classList.add('flex');
+        }
+
+        function hideLoader() {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('loader').classList.remove('flex');
+        }
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTable(products);
+            updateChart();
+            refreshData();
+        });
+    </script>
+</body>
+</html>
