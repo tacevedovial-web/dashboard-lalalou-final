@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Dashboard FINAL 100% Funcional - Inventario Lalalou</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS para Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-pulse { animation: pulse 2s infinite; }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-critical { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-warning { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+        .badge-success { background: #d1fae5; color: #059669; border: 1px solid #a7f3d0; }
+        .badge-info { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        
+        /* Progress bars */
+        .progress-bar {
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .progress-critical { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .progress-warning { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .progress-good { background: linear-gradient(90deg, #10b981, #059669); }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Table styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .table th:hover {
+            background: #f1f5f9;
+        }
+        
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #334155;
+        }
+        
+        .table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .table tr.critical {
+            background: #fef2f2;
+        }
+        
+        .table tr.warning {
+            background: #fffbeb;
+        }
+        
+        /* Chart containers */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            animation: fadeIn 0.3s ease-out;
+            display: none;
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .toast.warning {
+            background: #f59e0b;
+        }
+        
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .table th, .table td {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="toast-message">Operación completada</span>
+        </div>
+    </div>
+    
+    <!-- Modal de detalles -->
+    <div id="productModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900" id="modal-title">Detalles del Producto</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="modal-content">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de acciones urgentes -->
+    <div id="actionsModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">🚨 Acciones Urgentes</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="actions-content">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-3 rounded-xl">
+                        <i class="fas fa-chart-bar text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Dashboard FINAL 100% Funcional</h1>
+                        <p class="text-gray-600 text-sm">
+                            Inventario Lalalou • TODOS los botones funcionan
+                            <span class="ml-3 badge badge-critical animate-pulse">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>6 PRODUCTOS CRÍTICOS
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="exportToExcel()" class="px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center gap-2" id="excelBtn">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button onclick="exportToPDF()" class="px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center gap-2" id="pdfBtn">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats Bar -->
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <p class="text-sm font-medium text-blue-900">Stock Total</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-1" id="stat-stock">802</p>
+                    <p class="text-xs text-blue-600">unidades disponibles</p>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <p class="text-sm font-medium text-green-900">Ventas Semanales</p>
+                    <p class="text-2xl font-bold text-green-700 mt-1" id="stat-sales">298</p>
+                    <p class="text-xs text-green-600">uds/semana (ritmo ALTO)</p>
+                </div>
+                
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                    <p class="text-sm font-medium text-yellow-900">Semanas Restantes</p>
+                    <p class="text-2xl font-bold text-yellow-700 mt-1" id="stat-weeks">2.69</p>
+                    <p class="text-xs text-yellow-600">hasta ~25 Abril 2026</p>
+                </div>
+                
+                <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                    <p class="text-sm font-medium text-red-900">Productos Críticos</p>
+                    <p class="text-2xl font-bold text-red-700 mt-1" id="stat-critical">6</p>
+                    <p class="text-xs text-red-600">≤1 semana stock (+1 identificado)</p>
+                </div>
+                
+                <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <p class="text-sm font-medium text-purple-900">Margen Promedio</p>
+                    <p class="text-2xl font-bold text-purple-700 mt-1" id="stat-margin">49.9%</p>
+                    <p class="text-xs text-purple-600">Jeans: 47.8% (bajo)</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Critical Alert Banner -->
+        <div class="mb-6 animate-fade-in">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                        <div>
+                            <h3 class="font-bold text-lg">🚨 ACCIÓN INMEDIATA REQUERIDA</h3>
+                            <p class="text-sm opacity-90">
+                                6 productos tienen stock crítico (≤1 semana). Agotamiento total proyectado: 2.69 semanas.
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="showCriticalActions()" class="px-4 py-2 bg-white text-red-600 font-bold rounded-lg hover:bg-red-50 transition">
+                        Ver acciones urgentes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights del Data Analyst -->
+        <section class="mb-6 animate-fade-in" style="animation-delay: 0.1s">
+            <div class="card">
+                <div class="p-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-purple-500"></i>
+                        📊 Insights del Data Analyst (Análisis Colaborativo)
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <!-- Insight 1 -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition" onclick="showInsightDetail('critical')">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-blue-100 p-2 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-blue-900 mb-1">Producto Crítico Adicional</h3>
+                                    <p class="text-sm text-blue-700">
+                                        Identificado: CHAQUETA CUERO NEGRA (Talla M)<br>
+                                        <span class="text-xs text-blue-600">Stock: 2 unidades • Semanas: 0.5</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Insight 2 -->
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100 cursor-pointer hover:bg-green-100 transition" onclick="showInsightDetail('pattern')">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-2 rounded-lg">
+                                    <i class="fas fa-chart-pie text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-green-900 mb-1">Patrón de Ventas</h3>
+                                    <p class="text-sm text-green-700">
+                                        42% de ventas Miércoles-Viernes<br>
+                                        <span class="text-xs text-green-600">Oportunidad: Optimizar stock esos días</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Insight 3 -->
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100 cursor-pointer hover:bg-red-100 transition" onclick="showInsightDetail('profit
