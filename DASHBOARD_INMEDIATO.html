@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Dashboard INMEDIATO - 100% Funcional</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SheetJS para Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-critical { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-success { background: #d1fae5; color: #059669; border: 1px solid #a7f3d0; }
+        .badge-info { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white;
+            padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001; animation: fadeIn 0.3s ease-out; display: none;
+        }
+        .toast.error { background: #ef4444; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%;
+            width: 24px; height: 24px; animation: spin 1s linear infinite; display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="toast-message">Operación completada</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-3 rounded-xl">
+                        <i class="fas fa-chart-bar text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">🚀 Dashboard INMEDIATO 100% Funcional</h1>
+                        <p class="text-gray-600 text-sm">
+                            TODOS los botones funcionan • Prueba inmediata
+                            <span class="ml-3 badge badge-critical">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>6 PRODUCTOS CRÍTICOS
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="exportToExcel()" class="px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center gap-2" id="excelBtn">
+                        <i class="fas fa-file-excel"></i> Excel
+                        <div id="excelLoader" class="loader"></div>
+                    </button>
+                    <button onclick="exportToPDF()" class="px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center gap-2" id="pdfBtn">
+                        <i class="fas fa-file-pdf"></i> PDF
+                        <div id="pdfLoader" class="loader"></div>
+                    </button>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                        <div id="refreshLoader" class="loader"></div>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats Bar -->
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <p class="text-sm font-medium text-blue-900">Stock Total</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-1">802</p>
+                    <p class="text-xs text-blue-600">unidades disponibles</p>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <p class="text-sm font-medium text-green-900">Ventas Semanales</p>
+                    <p class="text-2xl font-bold text-green-700 mt-1">298</p>
+                    <p class="text-xs text-green-600">uds/semana (ritmo ALTO)</p>
+                </div>
+                
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                    <p class="text-sm font-medium text-yellow-900">Semanas Restantes</p>
+                    <p class="text-2xl font-bold text-yellow-700 mt-1">2.69</p>
+                    <p class="text-xs text-yellow-600">hasta ~25 Abril 2026</p>
+                </div>
+                
+                <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                    <p class="text-sm font-medium text-red-900">Productos Críticos</p>
+                    <p class="text-2xl font-bold text-red-700 mt-1">6</p>
+                    <p class="text-xs text-red-600">≤1 semana stock (+1 identificado)</p>
+                </div>
+                
+                <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <p class="text-sm font-medium text-purple-900">Margen Promedio</p>
+                    <p class="text-2xl font-bold text-purple-700 mt-1">49.9%</p>
+                    <p class="text-xs text-purple-600">Jeans: 47.8% (bajo)</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Critical Alert Banner -->
+        <div class="mb-6">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                        <div>
+                            <h3 class="font-bold text-lg">🚨 ACCIÓN INMEDIATA REQUERIDA</h3>
+                            <p class="text-sm opacity-90">
+                                6 productos tienen stock crítico (≤1 semana). Agotamiento total proyectado: 2.69 semanas.
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="showCriticalActions()" class="px-4 py-2 bg-white text-red-600 font-bold rounded-lg hover:bg-red-50 transition">
+                        Ver acciones urgentes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-boxes text-purple-500"></i>
+                            Productos del Inventario
+                        </h2>
+                        <p class="text-sm text-gray-600 mt-1">
+                            12 productos mostrados • 6 críticos • 2 exceso
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="showCriticalProducts()" class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Ver críticos
+                        </button>
+                        <button onclick="showAllProducts()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
+                            <i class="fas fa-list mr-2"></i>Ver todos
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ventas/Sem</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semanas</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTable" class="bg-white divide-y divide-gray-200">
+                            <!-- Los productos se cargan con JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Buttons -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">🧪 Prueba TODAS las funcionalidades</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onclick="testExcel()" class="p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-file-excel text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-green-900">Excel</h3>
+                            <p class="text-sm text-green-700">Descarga archivo .xlsx</p>
+                        </div>
+                    </div>
+                </button>
+                
+                <button onclick="testPDF()" class="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-blue-900">PDF</h3>
+                            <p class="text-sm text-blue-700">Genera reporte PDF</p>
+                        </div>
+                    </div>
+                </button>
+                
+                <button onclick="testRefresh()" class="p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-sync-alt text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-purple-900">Actualizar</h3>
+                            <p class="text-sm text-purple-700">Simula actualización</p>
+                        </div>
+                    </div>
+                </button>
+                
+                <button onclick="testAlerts()" class="p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-red-100 p-3 rounded-lg">
+                            <i class="fas fa-bell text-red-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-red-900">Alertas</h3>
+                            <p class="text-sm text-red-700">Muestra alertas críticas</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==================== DATOS ====================
+        const inventoryData = {
+            productos: [
+                { id: "LP-2026-001", sku: "LP-2026-001", nombre: "PANTALON BOLOGNA TERCIOPELO CHOCOLATE", categoria: "Pantalones", stock: 1, ventas_semanales: 5, semanas_restantes: 0.2, estado: "critico", precio: 89990, margen: 50.0 },
+                { id: "LP-2026-002", sku: "LP-2026-002", nombre: "BLAZER WAIST TERCIOPELO CHOCOLATE", categoria: "Blazers", stock: 1, ventas_semanales: 3, semanas_restantes: 0.3, estado: "critico", precio: 129990, margen: 50.0 },
+                { id: "LP-2026-003", sku: "LP-2026-003", nombre: "PANTALON LALALOU GABARDINA NEGRA", categoria: "Pantalones", stock: 2, ventas_semanales: 4, semanas_restantes: 0.5, estado: "critico", precio: 79990, margen: 50.0 },
+                { id: "LP-2026-011", sku: "LP-2026-011", nombre: "CHAQUETA CUERO NEGRA", categoria: "Chaquetas", stock: 2, ventas_semanales: 4, semanas_restantes: 0.5, estado: "critico", precio: 159990, margen: 50.0, nota: "IDENTIFICADO POR DATA ANALYST" },
+                { id: "LP-2026-012", sku: "LP-2026-012", nombre: "VESTIDO LARGO TERCIOPELO BURGUNDY", categoria: "Vestidos", stock: 3, ventas_semanales: 6, semanas_restantes: 0.5, estado: "critico", precio: 99990, margen: 50.0 },
+                { id: "LP-2026-013", sku: "LP-2026-013", nombre: "TOP CROP ALGODÓN NEGRO", categoria: "Tops", stock: 4, ventas_semanales: 8, semanas_restantes: 0.5, estado: "critico", precio: 39990, margen: 50.0 },
+                { id: "LP-2026-004", sku: "LP-2026-004", nombre: "POLERA RIB ALGODÓN BLANCA", categoria: "Poleras", stock: 150, ventas_semanales: 28, semanas_restantes: 5.4, estado: "bueno", precio: 29990, margen: 52.0 },
+                { id: "LP-2026-005", sku: "LP-2026-005", nombre: "ABRIGO LANA MERINO NEGRO", categoria: "Abrigos", stock: 120, ventas_semanales: 25, semanas_restantes: 4.8
