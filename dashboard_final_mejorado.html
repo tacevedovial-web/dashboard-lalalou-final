@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Dashboard Final - Inventario Lalalou</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        /* Animaciones suaves */
+        .animate-fade-in { 
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-slide-in {
+            animation: slideIn 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .animate-pulse-soft {
+            animation: pulseSoft 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseSoft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        /* Loading states elegantes */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .loader-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Badges mejorados */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .badge-critical {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+            border: 1px solid #f87171;
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+        }
+        
+        .badge-success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #059669;
+            border: 1px solid #34d399;
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.1);
+        }
+        
+        .badge-warning {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #d97706;
+            border: 1px solid #f59e0b;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.1);
+        }
+        
+        .badge-info {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1d4ed8;
+            border: 1px solid #60a5fa;
+            box-shadow: 0 2px 4px rgba(29, 78, 216, 0.1);
+        }
+        
+        /* Toast notifications mejorados */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 1001;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .toast.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .toast.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .toast.info {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Search input mejorado */
+        .search-input {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 16px 12px 40px;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+        
+        /* Botones mejorados */
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .btn-secondary:hover {
+            background: #f1f5f9;
+        }
+        
+        /* Responsive mejorado */
+        @media (max-width: 768px) {
+            .mobile-hidden { display: none !important; }
+            .mobile-full { width: 100% !important; }
+            .mobile-stack { flex-direction: column !important; }
+            .mobile-text-sm { font-size: 14px !important; }
+        }
+        
+        /* Modal mejorado */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            animation: modalSlideIn 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        @keyframes modalSlideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                        Dashboard Lalalou
+                    </h1>
+                    <span class="badge badge-info">Invierno 2026</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input 
+                            type="text" 
+                            id="searchInput"
+                            placeholder="Buscar productos..." 
+                            class="search-input w-64 mobile-full"
+                        >
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <div id="loadingIndicator" class="loader-spinner hidden"></div>
+                        <span id="lastUpdated" class="text-sm text-gray-500 mobile-hidden">
+                            Actualizado: <span id="updateTime">--:--</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Stock Total</p>
+                        <p id="stockTotal" class="text-2xl font-bold text-gray-900">802</p>
+                        <p class="text-xs text-gray-500 mt-1">unidades</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-lg p-3">
+                        <i class="fas fa-boxes text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Productos Críticos</p>
+                        <p id="productosCriticos" class="text-2xl font-bold text-red-600">6</p>
+                        <p class="text-xs text-red-500 mt-1">≤1 semana stock</p>
+                    </div>
+                    <div class="bg-red-100 rounded-lg p-3">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Ventas Semanales</p>
+                        <p id="ventasSemanales" class="text-2xl font-bold text-green-600">298</p>
+                        <p class="text-xs text-green-500 mt-1">unidades/sem</p>
+                    </div>
+                    <div class="bg-green-100 rounded-lg p-3">
+                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Margen Promedio</p>
+                        <p id="margenPromedio" class="text-2xl font-bold text-purple-600">49.9%</p>
+                        <p class="text-xs text-purple-500 mt-1">rentabilidad</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-lg p-3">
+                        <i class="fas fa-percentage text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros y Ordenamiento -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 animate-fade-in">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Ordenar por:</label>
+                    <select id="sortSelect" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="stock-asc">Stock (menor a mayor)</option>
+                        <option value="stock-desc">Stock (mayor a menor)</option>
+                        <option value="sales-desc">Ventas (mayor a menor)</option>
+                        <option value="sales-asc">Ventas (menor a mayor)</option>
+                        <option value="margin-desc">Margen (mayor a menor)</option>
+                        <option value="margin-asc">Margen (menor a mayor)</option>
+                        <option value="name-asc">Nombre (A-Z)</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Estado:</label>
+                    <select id="statusFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="all">Todos</option>
+                        <option value="critico">Críticos</option>
+                        <option value="bueno">Buenos</option>
+                        <option value="exceso">Exceso</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Categoría:</label>
+                    <select id="categoryFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="all">Todas</option>
+                    </select>
+                </div>
+                
+                <button id="clearFilters" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Limpiar filtros
+                </button>
+            </div>
+        </div>
+
+        <!-- Alertas Importantes -->
+        <div id="alertsContainer" class="mb-8">
+            <!-- Las alertas se cargarán dinámicamente -->
+        </div>
+
+        <!-- Tabla de Productos -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Inventario de Productos</h2>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Mostrando <span id="showingCount">0</span> de <span id="totalCount">0</span> productos
+                    </p>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <button id="refreshData" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i>
+                        Actualizar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Loading skeleton -->
+            <div id="loadingSkeleton" class="hidden">
+                <div class="space-y-3 p-6">
+                    <div class="skeleton h-4 rounded"></div>
+                    <div class="skeleton h-4 rounded"></div>
+                    <div class="skeleton h-4 rounded"></div>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Producto
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider mobile-hidden">
+                                SKU
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Stock
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Ventas/Sem
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider mobile-hidden">
+                                Sem. Rest.
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider mobile-hidden">
+                                Precio
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider mobile-hidden">
+                                Margen
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Estado
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Los productos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Mensaje sin resultados -->
+            <div id="noResultsMessage" class="hidden p-8 text-center">
+                <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron productos</h3>
+                <p class="text-gray-500">Intenta ajustar los filtros de búsqueda</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Detalle de Producto -->
+    <div id="productModal" class="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 modal-backdrop hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full modal-content">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-semibold text-gray-900">Detalle del Producto</h3>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="modalContent" class="p-6">
+                    <!-- El contenido se cargará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast" class="toast">
+        <div class="flex items-center">
+            <i id="toastIcon" class="fas fa-check mr-2"></i>
+            <span id="toastMessage">Mensaje</span>
+        </div>
+    </div>
+
+    <!-- Historial de Acciones (sidebar deslizante) -->
+    <div id="historySidebar" class="fixed right-0 top-0 h-full w-80 bg-white shadow-xl transform translate-x-full transition-transform duration-300 z-40 border-l border-gray-200">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Historial de Acciones</h3>
+                <button id="closeHistory" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="historyContent" class="p-6 overflow-y-auto h-full">
+            <div class="text-center text-gray-500">
+                <i class="fas fa-history text-2xl mb-2"></i>
+                <p>No hay acciones registradas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón flotante para historial -->
+    <button id="showHistory" class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-30">
+        <i class="fas fa-history"></i>
+    </button>
+
+    <script>
+        // Variables globales
+        let inventoryData = null;
+        let filteredProducts = [];
+        let actionHistory = [];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventoryData();
+            setupEventListeners();
+            updateTimestamp();
+            
+            // Animaciones en cascada para las cards
+            const cards = document.querySelectorAll('.animate-fade-in');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // Cargar datos de inventario
+        async function loadInventoryData() {
+            showLoading(true);
+            
+            try {
+                // Simular carga de datos reales
+                const response = await fetch('./data/inventory.json');
+                if (!response.ok) {
+                    // Si no se puede cargar desde archivo, usar datos embebidos
+                    inventoryData = getEmbeddedData();
+                } else {
+                    inventoryData = await response.json();
+                }
+                
+                populateData();
+                populateFilters();
+                showToast('Datos cargados correctamente', 'success');
+                addToHistory('Sistema', 'Datos de inventario cargados', 'info');
+                
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                // Usar datos embebidos como fallback
+                inventoryData = getEmbeddedData();
+                populateData();
+                populateFilters();
+                showToast('Usando datos de respaldo', 'warning');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Datos embebidos como fallback
+        function getEmbeddedData() {
+            return {
+                "metadata": {
+                    "empresa": "Lalalou",
+                    "temporada": "Invierno 2026",
+                    "fecha_analisis": "2026-04-13",
+                    "total_productos": 802,
+                    "productos_criticos": 6,
+                    "semanas_hasta_agotamiento": 2.69,
+                    "ventas_semanales": 298,
+                    "unidades_faltantes": 65,
+                    "margen_promedio": 49.9
+                },
+                "categorias": [
+                    { "id": "cat-001", "nombre": "Pantalones", "color": "#3b82f6", "margen": 49.9 },
+                    { "id": "cat-002", "nombre": "Blazers", "color": "#10b981", "margen": 50.0 },
+                    { "id": "cat-003", "nombre": "Poleras", "color": "#f59e0b", "margen": 52.3 },
+                    { "id": "cat-004", "nombre": "Abrigos", "color": "#ef4444", "margen": 51.8 },
+                    { "id": "cat-005", "nombre": "Blusas", "color": "#8b5cf6", "margen": 49.2 },
+                    { "id": "cat-006", "nombre": "Vestidos", "color": "#ec4899", "margen": 50.5 },
+                    { "id": "cat-007", "nombre": "Jeans", "color": "#14b8a6", "margen": 47.8 },
+                    { "id": "cat-008", "nombre": "Accesorios", "color": "#64748b", "margen": 48.5 },
+                    { "id": "cat-009", "nombre": "Chaquetas", "color": "#f97316", "margen": 49.5 },
+                    { "id": "cat-010", "nombre": "Tops", "color": "#06b6d4", "margen": 50.2 }
+                ],
+                "productos": [
+                    {
+                        "id": "LP-2026-001",
+                        "sku": "LP-2026-001",
+                        "nombre": "PANTALON BOLOGNA TERCIOPELO CHOCOLATE",
+                        "categoria": "Pantalones",
+                        "stock": 1,
+                        "ventas_semanales": 5,
+                        "semanas_restantes": 0.2,
+                        "estado": "critico",
+                        "precio": 89990,
+                        "costo": 44995,
+                        "margen": 50.0,
+                        "tallas": ["XS", "S", "M", "L"],
+                        "tallas_agotadas": ["XS", "S"],
+                        "prioridad": "alta",
+                        "nota": "Producto más vendido de la categoría"
+                    },
+                    {
+                        "id": "LP-2026-002",
+                        "sku": "LP-2026-002",
+                        "nombre": "BLAZER WAIST TERCIOPELO CHOCOLATE",
+                        "categoria": "Blazers",
+                        "stock": 1,
+                        "ventas_semanales": 3,
+                        "semanas_restantes": 0.3,
+                        "estado": "critico",
+                        "precio": 129990,
+                        "costo": 64995,
+                        "margen": 50.0,
+                        "tallas": ["S", "M", "L"],
+                        "tallas_agotadas": ["S"],
+                        "prioridad": "alta",
+                        "nota": "Tendencia en redes sociales"
+                    },
+                    {
+                        "id": "LP-2026-003",
+                        "sku": "LP-2026-003",
+                        "nombre": "PANTALON LALALOU GABARDINA NEGRA",
+                        "categoria": "Pantalones",
+                        "stock": 2,
+                        "ventas_semanales": 4,
+                        "semanas_restantes": 0.5,
+                        "estado": "critico",
+                        "precio": 79990,
+                        "costo": 39995,
+                        "margen": 50.0,
+                        "tallas": ["XS", "S", "M", "L", "XL"],
+                        "tallas_agotadas": ["XS"],
+                        "prioridad": "alta",
+                        "nota": "Básico de temporada"
+                    },
+                    {
+                        "id": "LP-2026-004",
+                        "sku": "LP-2026-004",
+                        "nombre": "POLERA RIB ALGODÓN BLANCA",
+                        "categoria": "Poleras",
+                        "stock": 150,
+                        "ventas_semanales": 28,
+                        "semanas_restantes": 5.4,
+                        "estado": "bueno",
+                        "precio": 29990,
+                        "costo": 14395,
+                        "margen": 52.0,
+                        "tallas": ["XS", "S", "M", "L", "XL"],
+                        "tallas_agotadas": [],
+                        "prioridad": "baja",
+                        "nota": "Mayor margen de la tienda"
+                    },
+                    {
+                        "id": "LP-2026-005",
+                        "sku": "LP-2026-005",
+                        "nombre": "ABRIGO LANA MERINO NEGRO",
+                        "categoria": "Abrigos",
+                        "stock": 120,
+                        "ventas_semanales": 25,
+                        "semanas_restantes": 4.8,
+                        "estado": "bueno",
+                        "precio": 159990,
+                        "costo": 76995,
+                        "margen": 51.9,
+                        "tallas": ["S", "M", "L", "XL"],
+                        "tallas_agotadas": [],
+                        "prioridad": "baja",
+                        "nota": "Segundo mayor margen"
+                    }
+                ],
+                "alertas": [
