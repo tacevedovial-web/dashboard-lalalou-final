@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>📱 Dashboard Móvil MEJORADO - Con Feedback Constructivista</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Estilos del Frontend Developer */
+        .ranking-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .ranking-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .ranking-high { border-left-color: #10b981; }
+        .ranking-medium { border-left-color: #f59e0b; }
+        .ranking-low { border-left-color: #ef4444; }
+        
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        
+        .haptic-feedback:active {
+            animation: haptic 0.1s ease;
+        }
+        
+        @keyframes haptic {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+        
+        .trend-chart-container {
+            height: 200px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-gray-100 min-h-screen pb-24">
+    
+    <!-- Header -->
+    <header class="pt-6 px-4">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-3 rounded-2xl shadow-lg">
+                    <i class="fas fa-chart-bar text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Dashboard MEJORADO</h1>
+                    <p class="text-gray-600 text-sm">Con feedback del equipo</p>
+                </div>
+            </div>
+            <div class="bg-white p-2 rounded-full shadow">
+                <span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    +18% VENTAS
+                </span>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="px-4 space-y-4">
+        
+        <!-- 🥇 NUEVO: Ranking de Márgenes por Categoría -->
+        <div class="bg-white rounded-2xl shadow-lg p-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">
+                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                    Ranking de Márgenes
+                </h2>
+                <span class="text-xs text-gray-500">Data Analyst Team</span>
+            </div>
+            
+            <div class="space-y-3">
+                <!-- Poleras - #1 -->
+                <div class="ranking-card ranking-high haptic-feedback" onclick="showCategoryDetail('poleras')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-100 p-2 rounded-lg">
+                                <span class="font-bold text-green-700">1</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Poleras</h3>
+                                <p class="text-sm text-gray-600">Margen más alto</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-green-600">52.0%</div>
+                            <div class="text-xs text-green-500">+2.1 vs promedio</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Abrigos - #2 -->
+                <div class="ranking-card ranking-high haptic-feedback" onclick="showCategoryDetail('abrigos')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-100 p-2 rounded-lg">
+                                <span class="font-bold text-green-700">2</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Abrigos</h3>
+                                <p class="text-sm text-gray-600">Alto margen</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-green-600">51.9%</div>
+                            <div class="text-xs text-green-500">+2.0 vs promedio</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pantalones - #3 -->
+                <div class="ranking-card ranking-medium haptic-feedback" onclick="showCategoryDetail('pantalones')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-yellow-100 p-2 rounded-lg">
+                                <span class="font-bold text-yellow-700">3</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Pantalones</h3>
+                                <p class="text-sm text-gray-600">Margen promedio</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-yellow-600">50.0%</div>
+                            <div class="text-xs text-yellow-500">+0.1 vs promedio</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Jeans - PROBLEMA -->
+                <div class="ranking-card ranking-low haptic-feedback" onclick="showCategoryDetail('jeans')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-red-100 p-2 rounded-lg">
+                                <span class="font-bold text-red-700">⚠️</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Jeans</h3>
+                                <p class="text-sm text-gray-600">PROBLEMA identificado</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-red-600">47.8%</div>
+                            <div class="text-xs text-red-500">-2.1 vs promedio</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-red-50 rounded-lg">
+                        <p class="text-sm text-red-700">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            Impacto anual: ~$1,260,000 CLP menos
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <button onclick="exportMarginReport()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold haptic-feedback">
+                    <i class="fas fa-download mr-2"></i>Exportar Reporte de Márgenes
+                </button>
+            </div>
+        </div>
+        
+        <!-- 🥈 Gráfico de Tendencia 7 Días -->
+        <div class="bg-white rounded-2xl shadow-lg p-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">
+                    <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                    Tendencia de Ventas
+                </h2>
+                <span class="text-sm font-bold trend-up">▲ +18%</span>
+            </div>
+            
+            <div class="trend-chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+            
+            <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div class="p-2 bg-blue-50 rounded-lg">
+                    <p class="text-xs text-gray-500">Hoy</p>
+                    <p class="font-bold text-blue-700">45</p>
+                </div>
+                <div class="p-2 bg-green-50 rounded-lg">
+                    <p class="text-xs text-gray-500">Ayer</p>
+                    <p class="font-bold text-green-700">38</p>
+                </div>
+                <div class="p-2 bg-purple-50 rounded-lg">
+                    <p class="text-xs text-gray-500">Prom 7d</p>
+                    <p class="font-bold text-purple-700">42.6</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 🎯 Insights del Data Analyst (Mejorados) -->
+        <div class="bg-white rounded-2xl shadow-lg p-4">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">
+                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                Insights Mejorados
+            </h2>
+            
+            <div class="space-y-3">
+                <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 haptic-feedback" onclick="showInsightDetail('optimization')">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <i class="fas fa-ghost text-blue-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-blue-900">Optimización de Inventario</h3>
+                            <p class="text-sm text-blue-700">65 unidades "fantasma" en sistema</p>
+                            <p class="text-xs text-blue-600">7.5% discrepancia • Auditoría recomendada</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-blue-400 mt-1"></i>
+                    </div>
+                </div>
+                
+                <div class="p-3 bg-green-50 rounded-xl border border-green-100 haptic-feedback" onclick="showInsightDetail('seasonality')">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-green-100 p-2 rounded-lg">
+                            <i class="fas fa-chart-bar text-green-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-green-900">Estacionalidad Detectada</h3>
+                            <p class="text-sm text-green-700">Ventas +18% últimos 7 días</p>
+                            <p class="text-xs text-green-600">Tendencia ascendente • Stock +20% recomendado</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-green-400 mt-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 📤 Acciones Principales (Mejoradas con háptica) -->
+        <div class="bg-white rounded-2xl shadow-lg p-4">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Acciones</h2>
+            
+            <div class="space-y-3">
+                <button onclick="exportToExcelMobile()" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold haptic-feedback flex items-center justify-center gap-2">
+                    <i class="fas fa-file-excel"></i> Excel con Ranking
+                </button>
+                
+                <button onclick="exportToPDFMobile()" class="w-full py-3 bg-red-600 text-white rounded-xl font-bold haptic-feedback flex items-center justify-center gap-2">
+                    <i class="fas fa-file-pdf"></i> PDF con Insights
+                </button>
+                
+                <button onclick="showCriticalActions()" class="w-full py-3 bg-yellow-600 text-white rounded-xl font-bold haptic-feedback flex items-center justify-center gap-2">
+                    <i class="fas fa-exclamation-triangle"></i> Ver 6 Productos Críticos
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="mt-8 px-4 text-center">
+        <p class="text-sm text-gray-500">
+            🚀 Desarrollado con <strong>flujo constructivista</strong><br>
+            Cliente → PM → Data Analyst → Frontend → PM → Cliente
+        </p>
+        <p class="text-xs text-gray-400 mt-2">
+            Equipo DeepSeek • Feedback loops activos • Costos optimizados
+        </p>
+    </footer>
+
+    <script>
+        // 📊 Gráfico de Tendencia
+        document.addEventListener('DOMContentLoaded', function() {
+            // Datos de tendencia 7 días
+            const ctx = document.getElementById('trendChart');
+            if (ctx && window.Chart) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Hace 6d', 'Hace 5d', 'Hace 4d', 'Hace 3d', 'Hace 2d', 'Ayer', 'Hoy'],
+                        datasets: [{
+                            label: 'Ventas Diarias',
+                            data: [36, 38, 40, 42, 38, 45, 45],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: false, min: 30 }
+                        }
+                    }
+                });
+            }
+        });
+        
+        // 📈 Funcionalidades
+        function showCategoryDetail(category) {
+            const details = {
+                poleras: `📊 POLERAS - Margen Líder (52.0%)
+                
+• Ventas semanales: 28 unidades
+• Precio promedio: $29,990
+• Margen: 52.0% (+2.1 vs promedio)
+• Stock actual: 150 unidades (5.4 semanas)
+
+🎯 RECOMENDACIONES:
+1. Mantener precio actual
+2. Promocionar como "producto estrella"
+3. Considerar aumento stock +10%`,
+                
+                abrigos: `🧥 ABRIGOS - Alto Margen (51.9%)
+                
+• Ventas semanales: 25 unidades  
+• Precio promedio: $159,990
+• Margen: 51.9% (+2.0 vs promedio)
+• Stock actual: 120 unidades (4.8 semanas)
+
+🎯 RECOMENDACIONES:
+1. Bundle con accesorios
+2. Temporada invierno: stock +15%
+3. Posicionamiento premium`,
+                
+                pantalones: `👖 PANTALONES - Margen Estable (50.0%)
+                
+• Ventas semanales: 9 unidades (promedio)
+• Precio promedio: $84,990
+• Margen: 50.0% (+0.1 vs promedio)
+• Stock actual: 180 unidades (varía)
+
+🎯 RECOMENDACIONES:
+1. Mantener estrategia actual
+2. Rotación estacional
+3. Paquete 2x1 en temporada baja`,
+                
+                jeans: `⚠️ JEANS - PROBLEMA IDENTIFICADO (47.8%)
+                
+• Ventas semanales: 18 unidades
+• Precio promedio: $59,990
+• Margen: 47.8% (-2.1 vs promedio)
+• Stock actual: 75 unidades (4.2 semanas)
+
+📉 IMPACTO FINANCIERO:
+• Pérdida vs promedio: $24,300 CLP/semana
+• Impacto anual: ~$1,260,000 CLP
+
+🔍 CAUSAS POSIBLES:
+1. Proveedor caro
+2. Precio bajo vs competencia
+3. Descuentos excesivos
+
+🎯 ACCIONES URGENTES:
+1. Revisar contrato proveedor (HOY)
+2. Aumentar precio 5-8% (próxima semana)
+3. Analizar costo producción`
+            };
+            
+            alert(details[category] || 'Detalles no disponibles');
+        }
+        
+        function exportMarginReport() {
+            alert('📊 Reporte de Márgenes exportado\n\nSe ha generado un archivo Excel con:\n• Ranking completo de categorías\n• Análisis de már
